@@ -13,7 +13,7 @@ import {
   formatDateTime,
   escapeHtml,
 } from './clients.js';
-import { exportToTxt, exportToWord, exportAllPatientsZip } from './export.js';
+import { exportToWord, exportAllPatientsZip } from './export.js';
 
 let currentClient = null;
 let editingClientId = null;
@@ -51,8 +51,7 @@ export async function initClientesPage() {
     });
   });
 
-  document.getElementById('export-txt-btn').addEventListener('click', () => downloadSelected('txt'));
-  document.getElementById('export-word-btn').addEventListener('click', () => downloadSelected('word'));
+  document.getElementById('export-word-btn').addEventListener('click', downloadSelected);
   document.getElementById('export-all-zip-btn').addEventListener('click', handleExportAllZip);
   document.getElementById('select-all-consultas').addEventListener('change', toggleSelectAll);
   document.getElementById('edit-from-view-btn').addEventListener('click', () => {
@@ -104,15 +103,14 @@ function toggleSelectAll(e) {
   updateSelectedCount();
 }
 
-function downloadSelected(format) {
+function downloadSelected() {
   if (!currentClient) return;
   const selected = getSelectedConsultas();
   if (!selected.length) {
     alert('Selecciona al menos una consulta para descargar.');
     return;
   }
-  if (format === 'txt') exportToTxt(currentClient, selected);
-  else exportToWord(currentClient, selected);
+  exportToWord(currentClient, selected);
 }
 
 async function handleExportAllZip() {

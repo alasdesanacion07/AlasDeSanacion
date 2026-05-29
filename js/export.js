@@ -1,30 +1,5 @@
 import { formatDate, formatDateTime } from './clients.js';
 
-export function buildTxtContent(client, consultas) {
-  let content = `ALAS DE SANACIÓN - Historia Clínica\n`;
-  content += `${'='.repeat(50)}\n\n`;
-  content += `Cliente: ${client.nombre}\n`;
-  content += `Fecha de nacimiento: ${formatDate(client.fecha_nacimiento)}\n`;
-  content += `Celular: ${client.celular}\n`;
-  content += `Correo: ${client.correo || '—'}\n\n`;
-  content += `${'─'.repeat(50)}\n`;
-  content += `CONSULTAS\n`;
-  content += `${'─'.repeat(50)}\n\n`;
-
-  if (!consultas.length) {
-    content += 'Sin consultas registradas.\n';
-  } else {
-    consultas.forEach((c, i) => {
-      content += `Consulta ${i + 1}: ${c.titulo || 'Sin título'}\n`;
-      content += `Fecha: ${formatDateTime(c.fecha_consulta)}\n`;
-      content += `${c.contenido}\n\n`;
-      content += `${'─'.repeat(30)}\n\n`;
-    });
-  }
-
-  return content;
-}
-
 export function buildWordHtml(client, consultas) {
   const consultasHtml = consultas.length
     ? consultas
@@ -67,14 +42,6 @@ export function buildWordHtml(client, consultas) {
 </html>`;
 }
 
-export function exportToTxt(client, consultas) {
-  downloadFile(
-    `${sanitizeFilename(client.nombre)}_historia_clinica.txt`,
-    buildTxtContent(client, consultas),
-    'text/plain;charset=utf-8'
-  );
-}
-
 export function exportToWord(client, consultas) {
   downloadFile(
     `${sanitizeFilename(client.nombre)}_historia_clinica.doc`,
@@ -93,7 +60,6 @@ export async function exportAllPatientsZip(clientsWithConsultas) {
   for (const { client, consultas } of clientsWithConsultas) {
     const folderName = sanitizeFolderName(client.nombre);
     const folder = zip.folder(folderName);
-    folder.file('historia_clinica.txt', buildTxtContent(client, consultas));
     folder.file('historia_clinica.doc', buildWordHtml(client, consultas));
   }
 

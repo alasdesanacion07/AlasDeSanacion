@@ -61,7 +61,7 @@ Abre `http://localhost:3000` en el navegador.
 - **Login admin** con validación de usuario, correo y contraseña vía Supabase Auth
 - **Dashboard** con total de clientes, consultas y cumpleaños del día
 - **Clientes**: agregar, editar, eliminar y buscar con filtros desplegables
-- **Consultas**: historia clínica por cliente con exportación a .TXT y Word
+- **Consultas**: historia clínica por cliente con exportación a Word
 - **Cumpleaños**: recordatorio visual y notificación por WhatsApp al abrir el dashboard
 - **Diseño responsive** en móvil, tablet y escritorio
 
