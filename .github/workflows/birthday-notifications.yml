@@ -2,8 +2,8 @@ name: Notificaciones cumpleaños automáticas
 
 on:
   schedule:
-    # PRUEBA: 12:11 PM hora Colombia (UTC-5) = 17:11 UTC
-    - cron: '11 17 * * *'
+    # 6:00 AM hora Colombia (UTC-5) = 11:00 UTC
+    - cron: '0 11 * * *'
   workflow_dispatch:
 
 jobs:
