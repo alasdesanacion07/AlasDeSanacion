@@ -6,10 +6,9 @@ Aplicación web minimalista para Alas de Sanación con landing page, panel de ad
 
 ```
 ├── index.html          → Página principal (logo, Nosotros, WhatsApp)
-├── admin/
-│   ├── login.html      → Login de administradores
-│   ├── dashboard.html  → Estadísticas y cumpleaños
-│   └── clientes.html   → CRUD de clientes y consultas
+├── login.html          → Login de administradores
+├── dashboard.html      → Estadísticas y cumpleaños
+├── clientes.html       → CRUD de clientes y consultas
 ├── css/styles.css      → Estilos responsive con paleta del logo
 ├── js/                 → Lógica de la aplicación
 ├── assets/logo.png     → Logo

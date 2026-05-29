@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — Alas de Sanación</title>
-  <link rel="stylesheet" href="../css/styles.css">
-  <link rel="icon" href="../assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="assets/logo.png" type="image/png">
 </head>
 <body>
   <div class="login-page">
     <div class="login-card">
-      <img src="../assets/logo.png" alt="Logo" class="logo-small">
+      <img src="assets/logo.png" alt="Logo" class="logo-small">
       <h2>Panel Admin</h2>
       <p class="subtitle">Ingresa tus credenciales para continuar</p>
 
@@ -33,14 +33,14 @@
       </form>
 
       <p style="text-align:center;margin-top:1.5rem;">
-        <a href="../index.html" style="font-size:0.85rem;color:var(--text-muted);">← Volver al inicio</a>
+        <a href="index.html" style="font-size:0.85rem;color:var(--text-muted);">← Volver al inicio</a>
       </p>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module">
-    import { signIn, getSupabase } from '../js/auth.js';
+    import { signIn, getSupabase } from './js/auth.js';
 
     const { data: { session } } = await getSupabase().auth.getSession();
     if (session) {
