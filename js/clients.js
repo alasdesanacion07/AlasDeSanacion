@@ -87,6 +87,42 @@ export async function createConsulta(clientId, titulo, contenido) {
   return data;
 }
 
+export async function updateConsulta(id, { titulo, contenido }) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('consultas')
+    .update({ titulo, contenido })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getAllClientsWithConsultas() {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('consultas')
+    .select('*, clients(*)')
+    .order('fecha_consulta', { ascending: false });
+  if (error) throw error;
+
+  const grouped = new Map();
+  for (const row of data || []) {
+    const client = row.clients;
+    if (!client) continue;
+    if (!grouped.has(client.id)) {
+      grouped.set(client.id, { client, consultas: [] });
+    }
+    const { clients, ...consulta } = row;
+    grouped.get(client.id).consultas.push(consulta);
+  }
+
+  return [...grouped.values()].sort((a, b) =>
+    a.client.nombre.localeCompare(b.client.nombre, 'es')
+  );
+}
+
 export async function deleteConsulta(id) {
   const supabase = getSupabase();
   const { error } = await supabase.from('consultas').delete().eq('id', id);

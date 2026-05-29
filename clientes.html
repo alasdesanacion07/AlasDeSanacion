@@ -10,7 +10,10 @@
 <body>
   <div class="admin-layout">
     <header class="admin-header">
-      <h1>ALAS DE SANACIÓN</h1>
+      <div class="admin-brand">
+        <img src="assets/logo.png" alt="Alas de Sanación" class="admin-logo">
+        <h1>ALAS DE SANACIÓN</h1>
+      </div>
       <nav class="admin-nav">
         <a href="dashboard.html" data-page="dashboard">Dashboard</a>
         <a href="clientes.html" data-page="clientes">Clientes</a>
@@ -21,7 +24,10 @@
     <main class="admin-main">
       <div class="page-header">
         <h2>Clientes</h2>
-        <button id="add-client-btn" class="btn btn-gold">+ Agregar Cliente</button>
+        <div class="page-header-actions">
+          <button id="export-all-zip-btn" class="btn btn-outline">Descargar todas (ZIP por paciente)</button>
+          <button id="add-client-btn" class="btn btn-gold">+ Agregar Cliente</button>
+        </div>
       </div>
 
       <div class="search-bar">
@@ -65,6 +71,9 @@
   <!-- Modal: Cliente -->
   <div class="modal-overlay" id="client-modal">
     <div class="modal">
+      <div class="modal-logo-wrap">
+        <img src="assets/logo.png" alt="Alas de Sanación" class="modal-logo">
+      </div>
       <div class="modal-header">
         <h3 id="client-modal-title">Agregar Cliente</h3>
         <button class="modal-close" aria-label="Cerrar">&times;</button>
@@ -95,22 +104,33 @@
 
   <!-- Modal: Consultas -->
   <div class="modal-overlay" id="consultas-modal">
-    <div class="modal" style="max-width:700px;">
+    <div class="modal modal-lg">
+      <div class="modal-logo-wrap">
+        <img src="assets/logo.png" alt="Alas de Sanación" class="modal-logo">
+      </div>
       <div class="modal-header">
         <h3 id="consultas-modal-title">Consultas</h3>
         <button class="modal-close" aria-label="Cerrar">&times;</button>
       </div>
 
+      <div class="consultas-toolbar">
+        <label class="select-all-label">
+          <input type="checkbox" id="select-all-consultas">
+          Seleccionar todas
+        </label>
+        <span id="selected-count" class="selected-count">0 seleccionadas</span>
+      </div>
+
       <div class="export-actions">
-        <button id="export-txt-btn" class="btn btn-sm btn-outline">Descargar .TXT</button>
-        <button id="export-word-btn" class="btn btn-sm btn-gold">Descargar Word</button>
+        <button id="export-txt-btn" class="btn btn-sm btn-outline">Descargar seleccionadas (.TXT)</button>
+        <button id="export-word-btn" class="btn btn-sm btn-gold">Descargar seleccionadas (Word)</button>
       </div>
 
       <div class="consultas-list" id="consultas-list"></div>
 
-      <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0;">
+      <hr class="modal-divider">
 
-      <h4 style="color:var(--purple);margin-bottom:1rem;font-family:var(--font-serif);">Nueva Consulta</h4>
+      <h4 class="modal-section-title">Nueva Consulta</h4>
       <form id="consulta-form">
         <div class="form-group">
           <label for="consulta-titulo">Título</label>
@@ -125,6 +145,50 @@
     </div>
   </div>
 
+  <!-- Modal: Ver consulta completa -->
+  <div class="modal-overlay" id="consulta-view-modal">
+    <div class="modal modal-lg">
+      <div class="modal-logo-wrap">
+        <img src="assets/logo.png" alt="Alas de Sanación" class="modal-logo">
+      </div>
+      <div class="modal-header">
+        <h3 id="view-consulta-titulo">Consulta</h3>
+        <button class="modal-close" aria-label="Cerrar">&times;</button>
+      </div>
+      <p id="view-consulta-fecha" class="consulta-view-fecha"></p>
+      <div id="view-consulta-contenido" class="consulta-view-body"></div>
+      <div class="consulta-view-actions">
+        <button type="button" id="edit-from-view-btn" class="btn btn-gold">Editar consulta</button>
+        <button type="button" class="btn btn-outline modal-close">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar consulta -->
+  <div class="modal-overlay" id="consulta-edit-modal">
+    <div class="modal modal-lg">
+      <div class="modal-logo-wrap">
+        <img src="assets/logo.png" alt="Alas de Sanación" class="modal-logo">
+      </div>
+      <div class="modal-header">
+        <h3>Editar Consulta</h3>
+        <button class="modal-close" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="consulta-edit-form">
+        <div class="form-group">
+          <label for="edit-consulta-titulo">Título</label>
+          <input type="text" id="edit-consulta-titulo">
+        </div>
+        <div class="form-group">
+          <label for="edit-consulta-contenido">Historia clínica / Notas *</label>
+          <textarea id="edit-consulta-contenido" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-gold" style="width:100%;">Guardar cambios</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module">
     import { requireAuth, initAdminNav } from './js/auth.js';

@@ -6,15 +6,20 @@ import {
   deleteClient,
   getConsultas,
   createConsulta,
+  updateConsulta,
   deleteConsulta,
+  getAllClientsWithConsultas,
   formatDate,
   formatDateTime,
   escapeHtml,
 } from './clients.js';
-import { exportToTxt, exportToWord } from './export.js';
+import { exportToTxt, exportToWord, exportAllPatientsZip } from './export.js';
 
 let currentClient = null;
 let editingClientId = null;
+let currentConsultas = [];
+let viewingConsulta = null;
+let editingConsultaId = null;
 
 export async function initClientesPage() {
   const params = new URLSearchParams(window.location.search);
@@ -31,23 +36,27 @@ export async function initClientesPage() {
   document.getElementById('add-client-btn').addEventListener('click', () => openClientModal());
   document.getElementById('client-form').addEventListener('submit', handleClientSubmit);
   document.getElementById('consulta-form').addEventListener('submit', handleConsultaSubmit);
+  document.getElementById('consulta-edit-form').addEventListener('submit', handleConsultaEditSubmit);
 
   document.querySelectorAll('.modal-close, .modal-overlay').forEach((el) => {
     el.addEventListener('click', (e) => {
-      if (e.target === el || el.classList.contains('modal-close')) closeModals();
+      if (e.target === el || el.classList.contains('modal-close')) {
+        const modal = el.closest('.modal-overlay') || el;
+        if (modal.id === 'consulta-view-modal' || modal.id === 'consulta-edit-modal') {
+          modal.classList.remove('open');
+          return;
+        }
+        closeModals();
+      }
     });
   });
 
-  document.getElementById('export-txt-btn').addEventListener('click', async () => {
-    if (!currentClient) return;
-    const consultas = await getConsultas(currentClient.id);
-    exportToTxt(currentClient, consultas);
-  });
-
-  document.getElementById('export-word-btn').addEventListener('click', async () => {
-    if (!currentClient) return;
-    const consultas = await getConsultas(currentClient.id);
-    exportToWord(currentClient, consultas);
+  document.getElementById('export-txt-btn').addEventListener('click', () => downloadSelected('txt'));
+  document.getElementById('export-word-btn').addEventListener('click', () => downloadSelected('word'));
+  document.getElementById('export-all-zip-btn').addEventListener('click', handleExportAllZip);
+  document.getElementById('select-all-consultas').addEventListener('change', toggleSelectAll);
+  document.getElementById('edit-from-view-btn').addEventListener('click', () => {
+    if (viewingConsulta) openEditConsultaModal(viewingConsulta);
   });
 
   updateFilterInput();
@@ -66,6 +75,58 @@ function updateFilterInput() {
       type === 'nombre' ? 'Buscar por nombre...' :
       type === 'celular' ? 'Buscar por teléfono...' :
       'Buscar por correo...';
+  }
+}
+
+function truncate(text, max = 100) {
+  if (!text || text.length <= max) return text;
+  return `${text.slice(0, max).trim()}…`;
+}
+
+function getSelectedConsultas() {
+  const selectedIds = new Set(
+    [...document.querySelectorAll('.consulta-select:checked')].map((el) => el.dataset.id)
+  );
+  return currentConsultas.filter((c) => selectedIds.has(c.id));
+}
+
+function updateSelectedCount() {
+  const count = document.querySelectorAll('.consulta-select:checked').length;
+  const el = document.getElementById('selected-count');
+  if (el) el.textContent = `${count} seleccionada${count !== 1 ? 's' : ''}`;
+}
+
+function toggleSelectAll(e) {
+  const checked = e.target.checked;
+  document.querySelectorAll('.consulta-select').forEach((cb) => {
+    cb.checked = checked;
+  });
+  updateSelectedCount();
+}
+
+function downloadSelected(format) {
+  if (!currentClient) return;
+  const selected = getSelectedConsultas();
+  if (!selected.length) {
+    alert('Selecciona al menos una consulta para descargar.');
+    return;
+  }
+  if (format === 'txt') exportToTxt(currentClient, selected);
+  else exportToWord(currentClient, selected);
+}
+
+async function handleExportAllZip() {
+  const btn = document.getElementById('export-all-zip-btn');
+  btn.disabled = true;
+  btn.textContent = 'Generando ZIP…';
+  try {
+    const data = await getAllClientsWithConsultas();
+    await exportAllPatientsZip(data);
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Descargar todas (ZIP por paciente)';
   }
 }
 
@@ -173,18 +234,20 @@ async function handleDelete(id) {
 
 async function openConsultasModal(clientId) {
   currentClient = null;
+  currentConsultas = [];
   const modal = document.getElementById('consultas-modal');
   const list = document.getElementById('consultas-list');
   const title = document.getElementById('consultas-modal-title');
+  const selectAll = document.getElementById('select-all-consultas');
+
+  if (selectAll) selectAll.checked = false;
+  updateSelectedCount();
 
   list.innerHTML = '<div class="loading">Cargando consultas...</div>';
   modal.classList.add('open');
 
   try {
-    const allClients = await getClients('', '');
-    currentClient = allClients.find((c) => c.id === clientId);
-    if (!currentClient) throw new Error('Cliente no encontrado');
-
+    currentClient = await getClientById(clientId);
     title.textContent = `Consultas — ${currentClient.nombre}`;
     await renderConsultas(clientId);
   } catch (err) {
@@ -194,36 +257,86 @@ async function openConsultasModal(clientId) {
 
 async function renderConsultas(clientId) {
   const list = document.getElementById('consultas-list');
-  const consultas = await getConsultas(clientId);
+  currentConsultas = await getConsultas(clientId);
 
-  if (!consultas.length) {
+  if (!currentConsultas.length) {
     list.innerHTML = '<p class="empty-state">No hay consultas registradas.</p>';
+    updateSelectedCount();
     return;
   }
 
-  list.innerHTML = consultas
+  list.innerHTML = currentConsultas
     .map(
       (c) => `
-    <div class="consulta-item">
-      <div class="consulta-item-header">
-        <div>
-          <strong>${escapeHtml(c.titulo || 'Consulta')}</strong>
-          <span>${formatDateTime(c.fecha_consulta)}</span>
+    <div class="consulta-item" data-id="${c.id}">
+      <label class="consulta-check" onclick="event.stopPropagation()">
+        <input type="checkbox" class="consulta-select" data-id="${c.id}">
+      </label>
+      <div class="consulta-item-body" data-id="${c.id}" title="Clic para leer completa">
+        <div class="consulta-item-header">
+          <div>
+            <strong>${escapeHtml(c.titulo || 'Consulta')}</strong>
+            <span>${formatDateTime(c.fecha_consulta)}</span>
+          </div>
         </div>
-        <button class="btn btn-sm btn-danger delete-consulta-btn" data-id="${c.id}">Eliminar</button>
+        <p class="consulta-preview">${escapeHtml(truncate(c.contenido))}</p>
+        <span class="consulta-read-hint">Clic para ver completa →</span>
       </div>
-      <p>${escapeHtml(c.contenido)}</p>
+      <div class="consulta-item-actions">
+        <button type="button" class="btn btn-sm btn-gold edit-consulta-btn" data-id="${c.id}">Editar</button>
+        <button type="button" class="btn btn-sm btn-danger delete-consulta-btn" data-id="${c.id}">Eliminar</button>
+      </div>
     </div>`
     )
     .join('');
 
+  list.querySelectorAll('.consulta-select').forEach((cb) => {
+    cb.addEventListener('change', updateSelectedCount);
+  });
+
+  list.querySelectorAll('.consulta-item-body').forEach((el) => {
+    el.addEventListener('click', () => {
+      const consulta = currentConsultas.find((c) => c.id === el.dataset.id);
+      if (consulta) openViewConsultaModal(consulta);
+    });
+  });
+
+  list.querySelectorAll('.edit-consulta-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const consulta = currentConsultas.find((c) => c.id === btn.dataset.id);
+      if (consulta) openEditConsultaModal(consulta);
+    });
+  });
+
   list.querySelectorAll('.delete-consulta-btn').forEach((btn) => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
       if (!confirm('¿Eliminar esta consulta?')) return;
       await deleteConsulta(btn.dataset.id);
+      document.getElementById('consulta-view-modal').classList.remove('open');
       await renderConsultas(clientId);
     });
   });
+
+  updateSelectedCount();
+}
+
+function openViewConsultaModal(consulta) {
+  viewingConsulta = consulta;
+  document.getElementById('view-consulta-titulo').textContent = consulta.titulo || 'Consulta';
+  document.getElementById('view-consulta-fecha').textContent = formatDateTime(consulta.fecha_consulta);
+  document.getElementById('view-consulta-contenido').textContent = consulta.contenido;
+  document.getElementById('consulta-view-modal').classList.add('open');
+}
+
+function openEditConsultaModal(consulta) {
+  editingConsultaId = consulta.id;
+  viewingConsulta = consulta;
+  document.getElementById('consulta-view-modal').classList.remove('open');
+  document.getElementById('edit-consulta-titulo').value = consulta.titulo || '';
+  document.getElementById('edit-consulta-contenido').value = consulta.contenido;
+  document.getElementById('consulta-edit-modal').classList.add('open');
 }
 
 async function handleConsultaSubmit(e) {
@@ -246,8 +359,32 @@ async function handleConsultaSubmit(e) {
   }
 }
 
+async function handleConsultaEditSubmit(e) {
+  e.preventDefault();
+  if (!editingConsultaId || !currentClient) return;
+
+  const titulo = document.getElementById('edit-consulta-titulo').value.trim() || 'Consulta';
+  const contenido = document.getElementById('edit-consulta-contenido').value.trim();
+  if (!contenido) {
+    alert('Escribe el contenido de la consulta.');
+    return;
+  }
+
+  try {
+    await updateConsulta(editingConsultaId, { titulo, contenido });
+    document.getElementById('consulta-edit-modal').classList.remove('open');
+    editingConsultaId = null;
+    await renderConsultas(currentClient.id);
+  } catch (err) {
+    alert('Error al actualizar consulta: ' + err.message);
+  }
+}
+
 function closeModals() {
   document.querySelectorAll('.modal-overlay').forEach((m) => m.classList.remove('open'));
   editingClientId = null;
   currentClient = null;
+  currentConsultas = [];
+  viewingConsulta = null;
+  editingConsultaId = null;
 }
