@@ -1,6 +1,6 @@
 import { getSupabase } from './auth.js';
 import { WHATSAPP_NUMBER, NOTIFY_FUNCTION } from './config.js';
-import { getSiteSettings, saveSiteSettings, normalizePhone, formatPhoneDisplay } from './settings.js';
+import { getSiteSettings, normalizePhone } from './settings.js';
 
 export async function getStats() {
   const supabase = getSupabase();
@@ -67,7 +67,7 @@ export async function sendBirthdayNotification(clientes, phone) {
     return {
       ok: false,
       fallback: true,
-      message: 'Envío automático no configurado. Se abrió WhatsApp como alternativa.',
+      message: 'Se abrió WhatsApp como alternativa.',
     };
   }
 
@@ -81,78 +81,11 @@ function showNotificationStatus(message, type = 'info') {
   el.className = `notification-status visible ${type}`;
 }
 
-async function loadNotificationSettings() {
-  const phoneInput = document.getElementById('settings-phone');
-  const apiKeyInput = document.getElementById('settings-callmebot-key');
-  const phoneHint = document.getElementById('settings-phone-hint');
-
-  try {
-    const settings = await getSiteSettings();
-    if (phoneInput) phoneInput.value = settings.telefono_notificaciones?.replace(/^57/, '') || '3204744197';
-    if (apiKeyInput && settings.callmebot_api_key) apiKeyInput.value = settings.callmebot_api_key;
-    if (phoneHint) {
-      phoneHint.textContent = `Las alertas se enviarán a ${formatPhoneDisplay(settings.telefono_notificaciones)}`;
-    }
-    return settings;
-  } catch {
-    if (phoneInput) phoneInput.value = '3204744197';
-    if (phoneHint) phoneHint.textContent = 'Las alertas se enviarán a +57 320 474 4197';
-    return { telefono_notificaciones: WHATSAPP_NUMBER, callmebot_api_key: '' };
-  }
-}
-
-async function handleSaveSettings(e) {
-  e.preventDefault();
-  const btn = document.getElementById('save-settings-btn');
-  const phone = document.getElementById('settings-phone').value.trim();
-  const apiKey = document.getElementById('settings-callmebot-key').value.trim();
-
-  btn.disabled = true;
-  try {
-    const saved = await saveSiteSettings({
-      telefono_notificaciones: phone,
-      callmebot_api_key: apiKey,
-    });
-    showNotificationStatus(
-      `Envío automático activo. Cada día a las 6:00 AM llegará un WhatsApp a ${formatPhoneDisplay(saved.telefono_notificaciones)}.`,
-      'success'
-    );
-    document.getElementById('settings-phone-hint').textContent =
-      `Las alertas se enviarán a ${formatPhoneDisplay(saved.telefono_notificaciones)}`;
-  } catch (err) {
-    showNotificationStatus('Error al guardar: ' + err.message, 'error');
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-async function showAutomationStatus(settings) {
-  if (settings?.callmebot_api_key) {
-    showNotificationStatus(
-      `Envío automático activo: cada día a las 6:00 AM recibirás un WhatsApp en ${formatPhoneDisplay(settings.telefono_notificaciones)} con los cumpleaños del día.`,
-      'success'
-    );
-  } else {
-    showNotificationStatus(
-      'Paso pendiente: configura la API Key de CallMeBot abajo para activar el envío automático diario.',
-      'info'
-    );
-  }
-}
-
 export async function initDashboard() {
   const statsEl = document.getElementById('stat-clientes');
   const consultasEl = document.getElementById('stat-consultas');
   const birthdayList = document.getElementById('birthday-list');
   const notifyBtn = document.getElementById('notify-birthdays-btn');
-  const settingsForm = document.getElementById('notification-settings-form');
-
-  if (settingsForm) {
-    settingsForm.addEventListener('submit', handleSaveSettings);
-  }
-
-  const settings = await loadNotificationSettings();
-  await showAutomationStatus(settings);
 
   try {
     const stats = await getStats();
@@ -184,8 +117,8 @@ export async function initDashboard() {
         notifyBtn.disabled = true;
         notifyBtn.textContent = 'Enviando…';
         try {
-          const currentSettings = await getSiteSettings();
-          const result = await sendBirthdayNotification(cumpleaneros, currentSettings.telefono_notificaciones);
+          const settings = await getSiteSettings();
+          const result = await sendBirthdayNotification(cumpleaneros, settings.telefono_notificaciones);
           showNotificationStatus(result.message, result.ok ? 'success' : 'info');
         } catch (err) {
           showNotificationStatus(err.message, 'error');
@@ -193,7 +126,7 @@ export async function initDashboard() {
           notifyBtn.disabled = false;
           notifyBtn.textContent = 'Probar envío ahora';
         }
-      }
+      };
 
       if (notifyBtn) {
         notifyBtn.style.display = 'inline-flex';
