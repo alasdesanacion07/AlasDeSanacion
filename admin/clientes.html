@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clientes — Alas de Sanación</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="icon" href="../assets/logo.png" type="image/png">
+</head>
+<body>
+  <div class="admin-layout">
+    <header class="admin-header">
+      <h1>ALAS DE SANACIÓN</h1>
+      <nav class="admin-nav">
+        <a href="dashboard.html" data-page="dashboard">Dashboard</a>
+        <a href="clientes.html" data-page="clientes">Clientes</a>
+        <a href="#" id="logout-btn">Salir</a>
+      </nav>
+    </header>
+
+    <main class="admin-main">
+      <div class="page-header">
+        <h2>Clientes</h2>
+        <button id="add-client-btn" class="btn btn-gold">+ Agregar Cliente</button>
+      </div>
+
+      <div class="search-bar">
+        <div class="form-group">
+          <label for="filter-type">Filtrar por</label>
+          <select id="filter-type">
+            <option value="nombre">Nombre</option>
+            <option value="celular">Teléfono</option>
+            <option value="fecha_nacimiento">Fecha de cumpleaños</option>
+            <option value="correo">Correo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filter-value">Valor</label>
+          <input type="text" id="filter-value" placeholder="Buscar...">
+        </div>
+        <button id="search-btn" class="btn btn-gold">Buscar</button>
+        <button id="clear-search-btn" class="btn btn-outline">Limpiar</button>
+      </div>
+
+      <div class="clients-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Nacimiento</th>
+              <th>Celular</th>
+              <th>Correo</th>
+              <th>Consultas</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="clients-tbody">
+            <tr><td colspan="6" class="loading">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Cliente -->
+  <div class="modal-overlay" id="client-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="client-modal-title">Agregar Cliente</h3>
+        <button class="modal-close" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="client-form">
+        <div class="form-group">
+          <label for="client-nombre">Nombre *</label>
+          <input type="text" id="client-nombre" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="client-fecha">Fecha de nacimiento *</label>
+            <input type="date" id="client-fecha" required>
+          </div>
+          <div class="form-group">
+            <label for="client-celular">Celular *</label>
+            <input type="tel" id="client-celular" required placeholder="3201234567">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="client-correo">Correo</label>
+          <input type="email" id="client-correo" placeholder="correo@ejemplo.com">
+        </div>
+        <button type="submit" class="btn btn-gold" style="width:100%;">Guardar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Consultas -->
+  <div class="modal-overlay" id="consultas-modal">
+    <div class="modal" style="max-width:700px;">
+      <div class="modal-header">
+        <h3 id="consultas-modal-title">Consultas</h3>
+        <button class="modal-close" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <div class="export-actions">
+        <button id="export-txt-btn" class="btn btn-sm btn-outline">Descargar .TXT</button>
+        <button id="export-word-btn" class="btn btn-sm btn-gold">Descargar Word</button>
+      </div>
+
+      <div class="consultas-list" id="consultas-list"></div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0;">
+
+      <h4 style="color:var(--purple);margin-bottom:1rem;font-family:var(--font-serif);">Nueva Consulta</h4>
+      <form id="consulta-form">
+        <div class="form-group">
+          <label for="consulta-titulo">Título</label>
+          <input type="text" id="consulta-titulo" placeholder="Ej: Sesión de sanación emocional">
+        </div>
+        <div class="form-group">
+          <label for="consulta-contenido">Historia clínica / Notas *</label>
+          <textarea id="consulta-contenido" required placeholder="Registra aquí los detalles de la consulta..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-gold" style="width:100%;">Agregar Consulta</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module">
+    import { requireAuth, initAdminNav } from '../js/auth.js';
+    import { initClientesPage } from '../js/clientes-page.js';
+
+    await requireAuth();
+    initAdminNav('clientes');
+    initClientesPage();
+  </script>
+</body>
+</html>

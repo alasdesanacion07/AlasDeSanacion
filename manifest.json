@@ -1,0 +1,18 @@
+{
+  "name": "Alas de Sanación",
+  "short_name": "AlasSanación",
+  "description": "Espacio de sanación, transformación y bienestar integral",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#E6E0F0",
+  "theme_color": "#4B2C7F",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

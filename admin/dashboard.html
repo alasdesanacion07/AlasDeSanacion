@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Alas de Sanación</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="icon" href="../assets/logo.png" type="image/png">
+</head>
+<body>
+  <div class="admin-layout">
+    <header class="admin-header">
+      <h1>ALAS DE SANACIÓN</h1>
+      <nav class="admin-nav">
+        <a href="dashboard.html" data-page="dashboard">Dashboard</a>
+        <a href="clientes.html" data-page="clientes">Clientes</a>
+        <a href="#" id="logout-btn">Salir</a>
+      </nav>
+    </header>
+
+    <main class="admin-main">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <a href="clientes.html" class="btn btn-gold">Gestionar Clientes</a>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="stat-clientes">—</div>
+          <div class="stat-label">Clientes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-consultas">—</div>
+          <div class="stat-label">Consultas</div>
+        </div>
+      </div>
+
+      <div class="birthday-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:0.5rem;">
+          <h3>🎂 Cumpleaños de hoy</h3>
+          <button id="notify-birthdays-btn" class="btn btn-sm btn-gold" style="display:none;">
+            Notificar por WhatsApp
+          </button>
+        </div>
+        <ul class="birthday-list" id="birthday-list">
+          <li class="birthday-empty">Cargando...</li>
+        </ul>
+      </div>
+
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <a href="clientes.html" class="btn btn-outline">Buscar Clientes</a>
+        <a href="clientes.html?action=add" class="btn btn-gold">Agregar Cliente</a>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module">
+    import { requireAuth, initAdminNav } from '../js/auth.js';
+    import { initDashboard } from '../js/dashboard.js';
+
+    await requireAuth();
+    initAdminNav('dashboard');
+    initDashboard();
+  </script>
+</body>
+</html>
