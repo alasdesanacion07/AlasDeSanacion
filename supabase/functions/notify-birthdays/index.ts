@@ -5,11 +5,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const TIMEZONE = 'America/Bogota';
+
 function normalizePhone(phone: string) {
   const digits = phone.replace(/\D/g, '');
   if (digits.startsWith('57') && digits.length === 12) return digits;
   if (digits.length === 10) return `57${digits}`;
   return digits;
+}
+
+function getTodayInColombia() {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const formatted = formatter.format(now);
+  const [year, month, day] = formatted.split('-').map(Number);
+  return { year, month, day, dateStr: formatted };
 }
 
 Deno.serve(async (req) => {
@@ -37,16 +52,13 @@ Deno.serve(async (req) => {
         JSON.stringify({
           sent: false,
           fallback: true,
-          error: 'Configura la API key de CallMeBot en el dashboard para envío automático.',
+          error: 'Guarda la API key de CallMeBot en el Dashboard para activar el envío automático.',
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const today = new Date();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
-    const todayStr = today.toISOString().split('T')[0];
+    const { year, month, day, dateStr: todayStr } = getTodayInColombia();
 
     const { data: clients, error: clientsError } = await supabase
       .from('clients')
@@ -61,7 +73,7 @@ Deno.serve(async (req) => {
 
     if (!cumpleaneros.length) {
       return new Response(
-        JSON.stringify({ sent: false, message: 'No hay cumpleaños hoy.' }),
+        JSON.stringify({ sent: false, message: 'No hay cumpleaños hoy.', date: todayStr }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -76,17 +88,26 @@ Deno.serve(async (req) => {
 
     if (!pending.length) {
       return new Response(
-        JSON.stringify({ sent: false, message: 'Ya se envió la notificación de hoy.', phone }),
+        JSON.stringify({
+          sent: false,
+          message: 'Ya se envió la notificación automática de hoy.',
+          phone,
+          date: todayStr,
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const lines = pending.map((c) => {
-      const age = today.getFullYear() - new Date(c.fecha_nacimiento).getFullYear();
+      const birthYear = Number(c.fecha_nacimiento.split('-')[0]);
+      const age = year - birthYear;
       return `• ${c.nombre} (${age} años · ${c.celular})`;
     });
 
-    const text = `🎂 Recordatorio Alas de Sanación\n\nHoy cumplen años:\n${lines.join('\n')}\n\n¡No olvides felicitarlos!`;
+    const text =
+      `🎂 Recordatorio Alas de Sanación\n\n` +
+      `Hoy ${todayStr} cumplen años:\n${lines.join('\n')}\n\n` +
+      `¡No olvides felicitarlos!`;
 
     const callUrl =
       `https://api.callmebot.com/whatsapp.php?phone=${phone}` +
@@ -111,13 +132,16 @@ Deno.serve(async (req) => {
         sent: true,
         phone,
         count: pending.length,
-        message: `Notificación enviada al +${phone}`,
+        date: todayStr,
+        clientes: pending.map((c) => c.nombre),
+        message: `WhatsApp automático enviado al +${phone} con ${pending.length} cumpleaño(s).`,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     return new Response(
-      JSON.stringify({ sent: false, error: err.message }),
+      JSON.stringify({ sent: false, error: message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

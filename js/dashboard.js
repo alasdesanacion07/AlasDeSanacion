@@ -114,7 +114,7 @@ async function handleSaveSettings(e) {
       callmebot_api_key: apiKey,
     });
     showNotificationStatus(
-      `Teléfono guardado: ${formatPhoneDisplay(saved.telefono_notificaciones)}`,
+      `Envío automático activo. Cada día a las 8:00 AM llegará un WhatsApp a ${formatPhoneDisplay(saved.telefono_notificaciones)}.`,
       'success'
     );
     document.getElementById('settings-phone-hint').textContent =
@@ -126,23 +126,15 @@ async function handleSaveSettings(e) {
   }
 }
 
-async function tryAutoNotify(cumpleaneros) {
-  const supabase = getSupabase();
-  const { data, error } = await supabase.functions.invoke('notify-birthdays');
-
-  if (!error && data?.sent) {
-    showNotificationStatus(data.message, 'success');
-    return;
-  }
-
-  if (data?.message && !data?.fallback) {
-    showNotificationStatus(data.message, 'info');
-    return;
-  }
-
-  if (data?.fallback || error) {
+async function showAutomationStatus(settings) {
+  if (settings?.callmebot_api_key) {
     showNotificationStatus(
-      'Configura CallMeBot abajo para recibir WhatsApp automático al teléfono registrado.',
+      `Envío automático activo: cada día a las 8:00 AM recibirás un WhatsApp en ${formatPhoneDisplay(settings.telefono_notificaciones)} con los cumpleaños del día.`,
+      'success'
+    );
+  } else {
+    showNotificationStatus(
+      'Paso pendiente: configura la API Key de CallMeBot abajo para activar el envío automático diario.',
       'info'
     );
   }
@@ -160,6 +152,7 @@ export async function initDashboard() {
   }
 
   const settings = await loadNotificationSettings();
+  await showAutomationStatus(settings);
 
   try {
     const stats = await getStats();
@@ -198,17 +191,15 @@ export async function initDashboard() {
           showNotificationStatus(err.message, 'error');
         } finally {
           notifyBtn.disabled = false;
-          notifyBtn.textContent = 'Enviar notificación ahora';
+          notifyBtn.textContent = 'Probar envío ahora';
         }
-      };
+      }
 
       if (notifyBtn) {
         notifyBtn.style.display = 'inline-flex';
-        notifyBtn.textContent = 'Enviar notificación ahora';
+        notifyBtn.textContent = 'Probar envío ahora';
         notifyBtn.onclick = notify;
       }
-
-      await tryAutoNotify(cumpleaneros);
     }
   } catch (err) {
     console.error(err);

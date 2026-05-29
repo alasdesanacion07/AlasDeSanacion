@@ -1,0 +1,27 @@
+name: Notificaciones cumpleaños automáticas
+
+on:
+  schedule:
+    # 8:00 AM hora Colombia (UTC-5) = 13:00 UTC
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+jobs:
+  enviar-recordatorio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar WhatsApp de cumpleaños al teléfono registrado
+        run: |
+          echo "Ejecutando notificación automática de cumpleaños..."
+          HTTP_CODE=$(curl -s -o response.json -w "%{http_code}" -X POST \
+            "https://dfgfjiasjyvfdrneqydu.supabase.co/functions/v1/notify-birthdays" \
+            -H "Authorization: Bearer sb_publishable_dVaokbKpER5OTVt3ipw_AA_H4psKv2z" \
+            -H "apikey: sb_publishable_dVaokbKpER5OTVt3ipw_AA_H4psKv2z" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          echo "HTTP $HTTP_CODE"
+          cat response.json
+          if [ "$HTTP_CODE" = "404" ]; then
+            echo "::error::La función notify-birthdays no está desplegada en Supabase."
+            exit 1
+          fi

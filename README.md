@@ -65,15 +65,18 @@ Abre `http://localhost:3000` en el navegador.
 - **Cumpleaños**: recordatorio visual y notificación automática por WhatsApp al teléfono registrado
 - **Diseño responsive** en móvil, tablet y escritorio
 
-## Nota sobre notificaciones WhatsApp
+## Notificaciones automáticas de cumpleaños
 
-Las alertas de cumpleaños se envían al **teléfono registrado** en el Dashboard (por defecto +57 320 474 4197).
+Cada día a las **8:00 AM (Colombia)** el sistema envía solo un WhatsApp al teléfono registrado con los clientes que cumplen años.
 
-### Configuración (una sola vez)
+### Configuración única (3 pasos)
 
-1. Ejecuta `supabase/notificaciones-cumpleanos.sql` en el SQL Editor
-2. Despliega la Edge Function `notify-birthdays` en Supabase (carpeta `supabase/functions/notify-birthdays`)
-3. En el Dashboard, guarda tu teléfono y la API Key de [CallMeBot](https://www.callmebot.com/blog/free-api-whatsapp-messages/) (gratis)
-4. Opcional: activa el cron diario incluido en `notificaciones-cumpleanos.sql` para envío a las 8:00 AM
+**Paso A — SQL:** ejecuta `supabase/notificaciones-cumpleanos.sql` en Supabase SQL Editor.
 
-Sin CallMeBot, puedes usar el botón **Enviar notificación ahora** que abre WhatsApp manualmente.
+**Paso B — Función:** en Supabase → Edge Functions → crea `notify-birthdays` con el código de `supabase/functions/notify-birthdays/index.ts` → Deploy.
+
+**Paso C — CallMeBot + Dashboard:**
+1. En el WhatsApp **3204744197**, activa CallMeBot ([guía](https://www.callmebot.com/blog/free-api-whatsapp-messages/))
+2. En el Dashboard de la app, guarda teléfono `3204744197` y la API Key → **Guardar y activar envío automático**
+
+El workflow de GitHub `birthday-notifications.yml` dispara el envío diario sin abrir la app.
