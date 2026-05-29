@@ -113,6 +113,23 @@
         <button class="modal-close" aria-label="Cerrar">&times;</button>
       </div>
 
+      <h4 class="modal-section-title">Nueva Consulta</h4>
+      <form id="consulta-form">
+        <div class="form-group">
+          <label for="consulta-titulo">Título</label>
+          <input type="text" id="consulta-titulo" placeholder="Ej: Sesión de sanación emocional">
+        </div>
+        <div class="form-group">
+          <label for="consulta-contenido">Historia clínica / Notas *</label>
+          <textarea id="consulta-contenido" required placeholder="Registra aquí los detalles de la consulta..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-gold" style="width:100%;">Agregar Consulta</button>
+      </form>
+
+      <hr class="modal-divider">
+
+      <h4 class="modal-section-title">Consultas registradas</h4>
+
       <div class="consultas-toolbar">
         <label class="select-all-label">
           <input type="checkbox" id="select-all-consultas">
@@ -127,21 +144,6 @@
       </div>
 
       <div class="consultas-list" id="consultas-list"></div>
-
-      <hr class="modal-divider">
-
-      <h4 class="modal-section-title">Nueva Consulta</h4>
-      <form id="consulta-form">
-        <div class="form-group">
-          <label for="consulta-titulo">Título</label>
-          <input type="text" id="consulta-titulo" placeholder="Ej: Sesión de sanación emocional">
-        </div>
-        <div class="form-group">
-          <label for="consulta-contenido">Historia clínica / Notas *</label>
-          <textarea id="consulta-contenido" required placeholder="Registra aquí los detalles de la consulta..."></textarea>
-        </div>
-        <button type="submit" class="btn btn-gold" style="width:100%;">Agregar Consulta</button>
-      </form>
     </div>
   </div>
 
