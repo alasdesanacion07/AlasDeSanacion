@@ -14,7 +14,7 @@ jobs:
         run: |
           echo "Ejecutando notificación automática de cumpleaños..."
           HTTP_CODE=$(curl -s -o response.json -w "%{http_code}" -X POST \
-            "https://dfgfjiasjyvfdrneqydu.supabase.co/functions/v1/notify-birthdays" \
+            "https://dfgfjiasjyvfdrneqydu.supabase.co/functions/v1/smooth-responder" \
             -H "Authorization: Bearer sb_publishable_dVaokbKpER5OTVt3ipw_AA_H4psKv2z" \
             -H "apikey: sb_publishable_dVaokbKpER5OTVt3ipw_AA_H4psKv2z" \
             -H "Content-Type: application/json" \
@@ -22,6 +22,6 @@ jobs:
           echo "HTTP $HTTP_CODE"
           cat response.json
           if [ "$HTTP_CODE" = "404" ]; then
-            echo "::error::La función notify-birthdays no está desplegada en Supabase."
+            echo "::error::La función smooth-responder no está desplegada en Supabase."
             exit 1
           fi

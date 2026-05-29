@@ -1,5 +1,5 @@
 import { getSupabase } from './auth.js';
-import { WHATSAPP_NUMBER } from './config.js';
+import { WHATSAPP_NUMBER, NOTIFY_FUNCTION } from './config.js';
 import { getSiteSettings, saveSiteSettings, normalizePhone, formatPhoneDisplay } from './settings.js';
 
 export async function getStats() {
@@ -54,7 +54,7 @@ export function openWhatsAppFallback(phone, message) {
 
 export async function sendBirthdayNotification(clientes, phone) {
   const supabase = getSupabase();
-  const { data, error } = await supabase.functions.invoke('notify-birthdays');
+  const { data, error } = await supabase.functions.invoke(NOTIFY_FUNCTION);
 
   if (!error && data?.sent) {
     return { ok: true, message: data.message || 'Notificación enviada por WhatsApp.' };
