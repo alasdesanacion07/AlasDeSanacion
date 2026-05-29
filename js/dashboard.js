@@ -114,7 +114,7 @@ async function handleSaveSettings(e) {
       callmebot_api_key: apiKey,
     });
     showNotificationStatus(
-      `Envío automático activo. Cada día a las 8:00 AM llegará un WhatsApp a ${formatPhoneDisplay(saved.telefono_notificaciones)}.`,
+      `Envío automático activo. Cada día a las 6:00 AM llegará un WhatsApp a ${formatPhoneDisplay(saved.telefono_notificaciones)}.`,
       'success'
     );
     document.getElementById('settings-phone-hint').textContent =
@@ -129,7 +129,7 @@ async function handleSaveSettings(e) {
 async function showAutomationStatus(settings) {
   if (settings?.callmebot_api_key) {
     showNotificationStatus(
-      `Envío automático activo: cada día a las 8:00 AM recibirás un WhatsApp en ${formatPhoneDisplay(settings.telefono_notificaciones)} con los cumpleaños del día.`,
+      `Envío automático activo: cada día a las 6:00 AM recibirás un WhatsApp en ${formatPhoneDisplay(settings.telefono_notificaciones)} con los cumpleaños del día.`,
       'success'
     );
   } else {

@@ -67,7 +67,7 @@ Abre `http://localhost:3000` en el navegador.
 
 ## Notificaciones automáticas de cumpleaños
 
-Cada día a las **8:00 AM (Colombia)** el sistema envía solo un WhatsApp al teléfono registrado con los clientes que cumplen años.
+Cada día a las **6:00 AM (Colombia)** el sistema envía solo un WhatsApp al teléfono registrado con los clientes que cumplen años.
 
 ### Configuración única (3 pasos)
 
