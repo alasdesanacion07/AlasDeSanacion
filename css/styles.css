@@ -501,6 +501,69 @@ img {
   font-style: italic;
 }
 
+.settings-box {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.settings-box h3 {
+  color: var(--purple);
+  margin-bottom: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.settings-desc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.field-hint a {
+  color: var(--gold);
+}
+
+.notification-status {
+  display: none;
+  font-size: 0.85rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.notification-status.visible {
+  display: block;
+}
+
+.notification-status.success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.notification-status.info {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--purple);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.notification-status.error {
+  background: #fdecea;
+  color: #c0392b;
+  border: 1px solid #f5c6cb;
+}
+
 /* ---- Clients ---- */
 .page-header {
   display: flex;

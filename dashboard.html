@@ -42,12 +42,38 @@
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:0.5rem;">
           <h3>🎂 Cumpleaños de hoy</h3>
           <button id="notify-birthdays-btn" class="btn btn-sm btn-gold" style="display:none;">
-            Notificar por WhatsApp
+            Enviar notificación ahora
           </button>
         </div>
+        <p id="notification-status" class="notification-status"></p>
         <ul class="birthday-list" id="birthday-list">
           <li class="birthday-empty">Cargando...</li>
         </ul>
+      </div>
+
+      <div class="settings-box">
+        <h3>📱 Notificaciones WhatsApp</h3>
+        <p class="settings-desc">
+          Registra el teléfono donde recibirás los recordatorios de cumpleaños.
+          Para envío automático sin abrir el navegador, configura CallMeBot (gratis).
+        </p>
+        <form id="notification-settings-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="settings-phone">Teléfono de notificaciones</label>
+              <input type="tel" id="settings-phone" required placeholder="3204744197">
+              <small id="settings-phone-hint" class="field-hint"></small>
+            </div>
+            <div class="form-group">
+              <label for="settings-callmebot-key">API Key CallMeBot</label>
+              <input type="password" id="settings-callmebot-key" placeholder="Opcional — para envío automático">
+              <small class="field-hint">
+                Obtén tu key en <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank">callmebot.com</a>
+              </small>
+            </div>
+          </div>
+          <button type="submit" id="save-settings-btn" class="btn btn-gold btn-sm">Guardar teléfono</button>
+        </form>
       </div>
 
       <div style="display:flex;gap:1rem;flex-wrap:wrap;">

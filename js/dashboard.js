@@ -1,5 +1,6 @@
 import { getSupabase } from './auth.js';
 import { WHATSAPP_NUMBER } from './config.js';
+import { getSiteSettings, saveSiteSettings, normalizePhone, formatPhoneDisplay } from './settings.js';
 
 export async function getStats() {
   const supabase = getSupabase();
@@ -29,7 +30,7 @@ export async function getCumpleanosHoy() {
   if (error) throw error;
 
   return (data || []).filter((c) => {
-    const [y, m, d] = c.fecha_nacimiento.split('-').map(Number);
+    const [, m, d] = c.fecha_nacimiento.split('-').map(Number);
     return m === month && d === day;
   }).map((c) => {
     const birth = new Date(c.fecha_nacimiento);
@@ -40,39 +41,109 @@ export async function getCumpleanosHoy() {
 
 export function buildBirthdayWhatsAppMessage(clientes) {
   if (!clientes.length) return '';
-  const names = clientes.map((c) => `${c.nombre} (${c.edad} años)`).join(', ');
+  const lines = clientes.map((c) => `• ${c.nombre} (${c.edad} años · ${c.celular})`).join('\n');
   return encodeURIComponent(
-    `🎂 Recordatorio Alas de Sanación\n\nHoy cumplen años:\n${names}\n\n¡No olvides felicitarlos!`
+    `🎂 Recordatorio Alas de Sanación\n\nHoy cumplen años:\n${lines}\n\n¡No olvides felicitarlos!`
   );
 }
 
-export function openWhatsAppNotification(message) {
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
+export function openWhatsAppFallback(phone, message) {
+  const target = normalizePhone(phone || WHATSAPP_NUMBER);
+  window.open(`https://wa.me/${target}?text=${message}`, '_blank');
 }
 
-export async function checkAndNotifyBirthdays(clientes) {
-  if (!clientes.length) return;
-
+export async function sendBirthdayNotification(clientes, phone) {
   const supabase = getSupabase();
-  const today = new Date().toISOString().split('T')[0];
+  const { data, error } = await supabase.functions.invoke('notify-birthdays');
 
-  const { data: alreadySent } = await supabase
-    .from('birthday_notifications')
-    .select('client_id')
-    .eq('notified_at', today);
+  if (!error && data?.sent) {
+    return { ok: true, message: data.message || 'Notificación enviada por WhatsApp.' };
+  }
 
-  const sentIds = new Set((alreadySent || []).map((n) => n.client_id));
-  const pending = clientes.filter((c) => !sentIds.has(c.id));
+  const fallback = data?.fallback || error;
+  if (fallback && clientes.length) {
+    const msg = buildBirthdayWhatsAppMessage(clientes);
+    openWhatsAppFallback(phone, msg);
+    return {
+      ok: false,
+      fallback: true,
+      message: 'Envío automático no configurado. Se abrió WhatsApp como alternativa.',
+    };
+  }
 
-  if (!pending.length) return;
+  throw new Error(data?.error || error?.message || 'No se pudo enviar la notificación.');
+}
 
-  const message = buildBirthdayWhatsAppMessage(pending);
-  openWhatsAppNotification(message);
+function showNotificationStatus(message, type = 'info') {
+  const el = document.getElementById('notification-status');
+  if (!el) return;
+  el.textContent = message;
+  el.className = `notification-status visible ${type}`;
+}
 
-  for (const c of pending) {
-    await supabase.from('birthday_notifications').upsert(
-      { client_id: c.id, notified_at: today },
-      { onConflict: 'client_id,notified_at' }
+async function loadNotificationSettings() {
+  const phoneInput = document.getElementById('settings-phone');
+  const apiKeyInput = document.getElementById('settings-callmebot-key');
+  const phoneHint = document.getElementById('settings-phone-hint');
+
+  try {
+    const settings = await getSiteSettings();
+    if (phoneInput) phoneInput.value = settings.telefono_notificaciones?.replace(/^57/, '') || '3204744197';
+    if (apiKeyInput && settings.callmebot_api_key) apiKeyInput.value = settings.callmebot_api_key;
+    if (phoneHint) {
+      phoneHint.textContent = `Las alertas se enviarán a ${formatPhoneDisplay(settings.telefono_notificaciones)}`;
+    }
+    return settings;
+  } catch {
+    if (phoneInput) phoneInput.value = '3204744197';
+    if (phoneHint) phoneHint.textContent = 'Las alertas se enviarán a +57 320 474 4197';
+    return { telefono_notificaciones: WHATSAPP_NUMBER, callmebot_api_key: '' };
+  }
+}
+
+async function handleSaveSettings(e) {
+  e.preventDefault();
+  const btn = document.getElementById('save-settings-btn');
+  const phone = document.getElementById('settings-phone').value.trim();
+  const apiKey = document.getElementById('settings-callmebot-key').value.trim();
+
+  btn.disabled = true;
+  try {
+    const saved = await saveSiteSettings({
+      telefono_notificaciones: phone,
+      callmebot_api_key: apiKey,
+    });
+    showNotificationStatus(
+      `Teléfono guardado: ${formatPhoneDisplay(saved.telefono_notificaciones)}`,
+      'success'
+    );
+    document.getElementById('settings-phone-hint').textContent =
+      `Las alertas se enviarán a ${formatPhoneDisplay(saved.telefono_notificaciones)}`;
+  } catch (err) {
+    showNotificationStatus('Error al guardar: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function tryAutoNotify(cumpleaneros) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.functions.invoke('notify-birthdays');
+
+  if (!error && data?.sent) {
+    showNotificationStatus(data.message, 'success');
+    return;
+  }
+
+  if (data?.message && !data?.fallback) {
+    showNotificationStatus(data.message, 'info');
+    return;
+  }
+
+  if (data?.fallback || error) {
+    showNotificationStatus(
+      'Configura CallMeBot abajo para recibir WhatsApp automático al teléfono registrado.',
+      'info'
     );
   }
 }
@@ -82,6 +153,13 @@ export async function initDashboard() {
   const consultasEl = document.getElementById('stat-consultas');
   const birthdayList = document.getElementById('birthday-list');
   const notifyBtn = document.getElementById('notify-birthdays-btn');
+  const settingsForm = document.getElementById('notification-settings-form');
+
+  if (settingsForm) {
+    settingsForm.addEventListener('submit', handleSaveSettings);
+  }
+
+  const settings = await loadNotificationSettings();
 
   try {
     const stats = await getStats();
@@ -109,15 +187,28 @@ export async function initDashboard() {
         )
         .join('');
 
+      const notify = async () => {
+        notifyBtn.disabled = true;
+        notifyBtn.textContent = 'Enviando…';
+        try {
+          const currentSettings = await getSiteSettings();
+          const result = await sendBirthdayNotification(cumpleaneros, currentSettings.telefono_notificaciones);
+          showNotificationStatus(result.message, result.ok ? 'success' : 'info');
+        } catch (err) {
+          showNotificationStatus(err.message, 'error');
+        } finally {
+          notifyBtn.disabled = false;
+          notifyBtn.textContent = 'Enviar notificación ahora';
+        }
+      };
+
       if (notifyBtn) {
         notifyBtn.style.display = 'inline-flex';
-        notifyBtn.onclick = () => {
-          const msg = buildBirthdayWhatsAppMessage(cumpleaneros);
-          openWhatsAppNotification(msg);
-        };
+        notifyBtn.textContent = 'Enviar notificación ahora';
+        notifyBtn.onclick = notify;
       }
 
-      await checkAndNotifyBirthdays(cumpleaneros);
+      await tryAutoNotify(cumpleaneros);
     }
   } catch (err) {
     console.error(err);

@@ -62,9 +62,18 @@ Abre `http://localhost:3000` en el navegador.
 - **Dashboard** con total de clientes, consultas y cumpleaños del día
 - **Clientes**: agregar, editar, eliminar y buscar con filtros desplegables
 - **Consultas**: historia clínica por cliente con exportación a Word
-- **Cumpleaños**: recordatorio visual y notificación por WhatsApp al abrir el dashboard
+- **Cumpleaños**: recordatorio visual y notificación automática por WhatsApp al teléfono registrado
 - **Diseño responsive** en móvil, tablet y escritorio
 
 ## Nota sobre notificaciones WhatsApp
 
-Las notificaciones de cumpleaños abren WhatsApp con un mensaje prellenado al número **3204744197**. Para envío automático sin interacción del usuario se requiere WhatsApp Business API.
+Las alertas de cumpleaños se envían al **teléfono registrado** en el Dashboard (por defecto +57 320 474 4197).
+
+### Configuración (una sola vez)
+
+1. Ejecuta `supabase/notificaciones-cumpleanos.sql` en el SQL Editor
+2. Despliega la Edge Function `notify-birthdays` en Supabase (carpeta `supabase/functions/notify-birthdays`)
+3. En el Dashboard, guarda tu teléfono y la API Key de [CallMeBot](https://www.callmebot.com/blog/free-api-whatsapp-messages/) (gratis)
+4. Opcional: activa el cron diario incluido en `notificaciones-cumpleanos.sql` para envío a las 8:00 AM
+
+Sin CallMeBot, puedes usar el botón **Enviar notificación ahora** que abre WhatsApp manualmente.
