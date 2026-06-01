@@ -80,6 +80,8 @@ img {
 }
 
 .navbar-brand {
+  display: flex;
+  align-items: center;
   font-family: var(--font-serif);
   font-size: 1.1rem;
   font-weight: 600;
@@ -188,9 +190,15 @@ img {
 }
 
 .hero-logo {
-  width: min(320px, 70vw);
-  margin-bottom: 2rem;
+  width: min(360px, 88vw);
+  margin-bottom: 1.5rem;
   filter: drop-shadow(0 8px 24px rgba(75, 44, 127, 0.12));
+}
+
+.navbar-logo {
+  height: 44px;
+  width: auto;
+  display: block;
 }
 
 .hero-tagline {
